@@ -1,0 +1,953 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0b63ce">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Player Information shows available Free Fire player profile, rank, guild, pet, outfit and equipment details by UID.">
+  <meta name="robots" content="index,follow">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Player Information">
+  <meta property="og:title" content="Player Information">
+  <meta property="og:description" content="View available Free Fire player information using a UID.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self';base-uri 'self';object-src 'none';frame-ancestors 'self';form-action 'self';img-src 'self' data: https://i.ibb.co https://icons.icxbd.workers.dev https://ffx-outfit-api-xyz.vercel.app;connect-src 'self' https://ffxinfo-ffx.ffxapis.workers.dev;style-src 'self' 'unsafe-inline';script-src 'self' 'unsafe-inline'">
+  <title>Player Information</title>
+  <style>
+    :root{
+      --blue:#0b63ce;
+      --blue-dark:#08458f;
+      --blue-soft:#eaf3ff;
+      --navy:#10233f;
+      --ink:#22324a;
+      --muted:#64748b;
+      --line:#d8e3f0;
+      --surface:#fff;
+      --page:#f5f8fc;
+      --danger:#b42318;
+      --danger-bg:#fff1f0;
+      --success:#147a4b;
+      --shadow:0 12px 32px rgba(24,62,110,.08);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{min-height:100dvh;margin:0;background:radial-gradient(circle at 50% -10%,#fff 0,#f5f8fc 48%,#eef4fb 100%);color:var(--ink);line-height:1.5;overflow-x:hidden;display:flex;flex-direction:column}
+    body:before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;opacity:.55;background-image:linear-gradient(115deg,transparent 0 47%,rgba(75,151,235,.12) 47.2%,transparent 47.5%),linear-gradient(0deg,transparent 0 96%,rgba(105,167,234,.12) 96.2%,transparent 96.7%),linear-gradient(90deg,transparent 0 96%,rgba(105,167,234,.12) 96.2%,transparent 96.7%);background-size:280px 280px,32px 32px,32px 32px}
+    body:after{content:"";position:fixed;left:-20%;right:-20%;top:28%;height:1px;z-index:-1;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(53,128,220,.04),rgba(53,128,220,.28),rgba(53,128,220,.04),transparent);box-shadow:0 210px 0 rgba(53,128,220,.1),0 -190px 0 rgba(53,128,220,.07);transform:rotate(-8deg);animation:line-drift 9s ease-in-out infinite alternate}
+    @keyframes line-drift{from{transform:translateX(-4%) rotate(-8deg);opacity:.45}to{transform:translateX(4%) rotate(-8deg);opacity:.9}}
+    button,input{font:inherit}
+    button{cursor:pointer}
+    button:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #9bc6ff;outline-offset:2px}
+    .topbar{background:rgba(255,255,255,.82);border-bottom:1px solid rgba(190,211,235,.8);backdrop-filter:blur(18px);position:sticky;top:0;z-index:10;flex:0 0 auto}
+    .topbar-inner,.container{width:min(1120px,calc(100% - 32px));max-width:100%;margin:auto}
+    main.container{flex:1;display:flex;flex-direction:column}
+    .topbar-inner{min-height:68px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;align-items:center;gap:11px;color:var(--navy);text-decoration:none;font-weight:750}
+    .brand-mark{width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg,#2d8af0,#0755b6);display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px;box-shadow:inset 0 1px 0 rgba(255,255,255,.38),0 5px 12px rgba(11,99,206,.22);overflow:hidden}.brand-mark img{position:relative;z-index:1;display:block;width:100%;height:100%;object-fit:cover;object-position:center;border-radius:inherit}.brand-fallback{position:absolute;z-index:0}
+    .brand-name{font-size:17px;letter-spacing:-.2px}
+    .topbar-note{font-size:13px;color:var(--muted)}
+    .hero{padding:72px 0 34px;text-align:center}
+    .eyebrow{color:var(--blue);font-size:13px;font-weight:750;letter-spacing:.06em;text-transform:uppercase}
+    h1{margin:10px 0 12px;color:var(--navy);font-size:clamp(32px,5vw,54px);line-height:1.05;letter-spacing:-1.8px}
+    .hero-copy{max-width:590px;margin:0 auto;color:var(--muted);font-size:16px}
+    .search-card{width:100%;max-width:720px;margin:32px auto 0;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 20px 42px rgba(24,62,110,.1),0 3px 0 #dbe8f7;text-align:left}
+    .search-card:hover{box-shadow:0 25px 48px rgba(24,62,110,.13),0 4px 0 #dbe8f7}
+    .search-label{display:block;margin-bottom:8px;color:var(--navy);font-size:14px;font-weight:750}
+    .search-row{display:flex;gap:10px;min-width:0}
+    .uid-input{width:100%;min-width:0;border:1px solid #b8c9dc;border-radius:10px;padding:13px 14px;color:var(--navy);background:#fff;letter-spacing:.04em}
+    .uid-input::placeholder{color:#94a3b8;letter-spacing:0}
+    .search-button{border:0;border-radius:12px;padding:0 22px;background:linear-gradient(145deg,#2380e6,#0754b7);color:#fff;font-weight:750;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 5px 12px rgba(11,99,206,.2);transition:background .2s,transform .2s,box-shadow .2s}
+    .search-button:hover{background:linear-gradient(145deg,#2d8af0,#084b9f);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 8px 16px rgba(11,99,206,.25)}
+    .search-button:active{transform:translateY(1px)}
+    .search-button:disabled{cursor:wait;opacity:.7}
+    .hint{margin:9px 0 0;color:var(--muted);font-size:12px}
+    .status{display:none;align-items:flex-start;gap:10px;margin-top:14px;padding:12px 14px;border-radius:10px;font-size:14px}
+    .status.show{display:flex}
+    .status.error{background:var(--danger-bg);border:1px solid #f2c4bf;color:var(--danger)}
+    .status.info{background:var(--blue-soft);border:1px solid #c7ddfb;color:var(--blue-dark)}
+    .status-icon{font-weight:800;line-height:1.3}
+    .retry-button{margin-left:auto;border:1px solid currentColor;border-radius:8px;padding:6px 10px;background:#fff;color:inherit;font-size:12px;font-weight:750;white-space:nowrap}
+    .loading{display:none;align-items:center;gap:9px;margin-top:15px;color:var(--blue);font-size:13px}
+    .loading.show{display:flex}
+    .spinner{width:16px;height:16px;border:2px solid #c7ddfb;border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .results{display:none;padding:22px 0 0}
+    .results.show{display:block}
+    .result-heading{display:flex;align-items:end;justify-content:space-between;gap:18px;margin:0 0 16px}
+    .result-heading h2{margin:0;color:var(--navy);font-size:24px;letter-spacing:-.5px}
+    .result-heading p{margin:3px 0 0;color:var(--muted);font-size:13px}
+    .result-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .app-action{border:1px solid #c4d5e8;background:rgba(255,255,255,.86);border-radius:10px;color:var(--blue-dark);padding:8px 12px;font-size:12px;font-weight:750;box-shadow:0 3px 0 #e1ebf6;transition:transform .2s,box-shadow .2s,background .2s}
+    .app-action:hover{background:#fff;transform:translateY(-2px);box-shadow:0 6px 12px rgba(24,62,110,.1),0 3px 0 #d6e5f5}
+    .app-action:active{transform:translateY(1px);box-shadow:0 1px 0 #e1ebf6}
+    .primary-action{border-color:#2074d4;background:var(--blue);color:#fff;box-shadow:0 3px 0 #08458f}
+    .profile-card{overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 22px 46px rgba(24,62,110,.1),0 4px 0 #dbe8f7}
+    .profile-banner{height:170px;background:linear-gradient(135deg,#dbeafe,#eff6ff);position:relative}
+    .profile-banner img{display:none;width:100%;height:100%;object-fit:cover}
+    .profile-banner-fallback{height:100%;display:grid;place-items:center;color:#8bb6ed;font-size:48px;font-weight:800;letter-spacing:-4px}
+    .profile-body{display:flex;align-items:flex-end;gap:18px;padding:0 24px 22px;margin-top:-43px;position:relative}
+    .avatar-wrap{position:relative;flex:0 0 auto}
+    .avatar{width:86px;height:86px;border:4px solid #fff;border-radius:16px;background:var(--blue-soft);box-shadow:0 5px 15px rgba(24,62,110,.15);display:grid;place-items:center;overflow:hidden;color:var(--blue);font-size:26px;font-weight:800}
+    .avatar img{display:none;width:100%;height:100%;object-fit:cover}
+    .level{position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);padding:2px 9px;background:var(--blue);border:2px solid #fff;border-radius:99px;color:#fff;font-size:11px;font-weight:750;white-space:nowrap}
+    .profile-main{min-width:0;flex:1;padding-bottom:3px}
+    .player-name{margin:0;color:var(--navy);font-size:clamp(21px,4vw,32px);line-height:1.1;overflow-wrap:anywhere}
+    .player-uid{margin:6px 0 0;color:var(--muted);font-size:13px}
+    .player-uid strong{color:var(--blue-dark);font-weight:750}
+    .likes{min-width:130px;padding:11px 14px;border:1px solid var(--line);border-radius:11px;text-align:center}
+    .likes strong{display:block;color:var(--blue);font-size:22px;line-height:1.1}
+    .likes span{color:var(--muted);font-size:11px}
+    .profile-meta{display:flex;flex-wrap:wrap;gap:8px;padding:14px 24px;border-top:1px solid var(--line);background:#fbfdff}
+    .badge{padding:5px 9px;border:1px solid #c7ddfb;border-radius:99px;background:var(--blue-soft);color:var(--blue-dark);font-size:12px;font-weight:700}
+    .exp{padding:16px 24px 20px;border-top:1px solid var(--line)}
+    .exp-label{display:flex;justify-content:space-between;margin-bottom:7px;color:var(--muted);font-size:12px}
+    .exp-track{height:8px;border-radius:99px;background:#e7eef7;overflow:hidden}
+    .exp-fill{height:100%;width:0;background:var(--blue);border-radius:99px;transition:width .3s ease}
+    .tabs{display:flex;gap:4px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;margin:22px 0 18px;padding:5px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.86);box-shadow:0 5px 0 #e5eef8}
+    .tab{flex:1;min-width:100px;border:0;border-radius:8px;padding:10px 12px;background:transparent;color:var(--muted);font-size:13px;font-weight:750}
+    .tab[aria-selected="true"]{background:var(--blue-soft);color:var(--blue-dark)}
+    .panel{display:none}
+    .panel.active{display:block}
+    .section-title{display:flex;align-items:center;gap:10px;min-width:0;margin:24px 0 11px;color:var(--navy);font-size:17px}
+    .section-title:after{content:"";height:1px;flex:1;background:var(--line)}
+    .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+    .stat{padding:15px;border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:0 3px 0 #e5eef8;transition:transform .22s ease,box-shadow .22s ease}
+    .stat:hover{transform:translateY(-3px);box-shadow:0 9px 18px rgba(24,62,110,.09),0 3px 0 #d6e5f5}
+    .stat-label{color:var(--muted);font-size:11px;font-weight:650;text-transform:uppercase;letter-spacing:.04em}
+    .stat-value{margin-top:5px;color:var(--navy);font-size:18px;font-weight:800;overflow-wrap:anywhere}
+    .stat-value.accent{color:var(--blue)}
+    .info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+    .info-card{border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden;box-shadow:0 3px 0 #e5eef8;transition:transform .22s ease,box-shadow .22s ease}
+    .info-card:hover{transform:translateY(-3px);box-shadow:0 10px 20px rgba(24,62,110,.08),0 3px 0 #d6e5f5}
+    .info-card h3{margin:0;padding:12px 15px;border-bottom:1px solid var(--line);background:#fbfdff;color:var(--navy);font-size:14px}
+    .info-list{margin:0;padding:6px 15px 9px}
+    .info-row{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid #edf2f7;font-size:13px}
+    .info-row:last-child{border-bottom:0}
+    .info-row dt{color:var(--muted)}
+    .info-row dd{margin:0;color:var(--navy);font-weight:700;text-align:right;overflow-wrap:anywhere}
+    .info-row dd.accent{color:var(--blue)}
+    .bio{margin-top:14px;padding:15px 17px;border-left:4px solid #9bc6ff;background:var(--blue-soft);border-radius:8px;color:var(--blue-dark);font-style:italic}
+    .media-card{display:grid;grid-template-columns:minmax(180px,280px) minmax(0,1fr);gap:20px;padding:18px;border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:0 3px 0 #e5eef8}
+    .outfit-preview{min-height:250px;border-radius:10px;background:var(--blue-soft);display:grid;place-items:center;overflow:hidden;color:var(--muted);font-size:13px;text-align:center}
+    .outfit-preview img{display:block;width:100%;height:100%;min-height:250px;object-fit:contain}
+    .media-copy h3{margin:4px 0 7px;color:var(--navy);font-size:18px}
+    .media-copy p{margin:0;color:var(--muted);font-size:14px}
+    .item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+    .item-card{min-width:0;border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden;box-shadow:0 3px 0 #e5eef8;transition:transform .22s ease,box-shadow .22s ease}
+    .item-card:hover{transform:translateY(-4px) rotateX(.5deg);box-shadow:0 12px 22px rgba(24,62,110,.1),0 3px 0 #d6e5f5}
+    .item-image{height:130px;background:#f5f8fc;display:grid;place-items:center;color:var(--muted);font-size:12px;text-align:center;padding:9px}
+    .item-image img{display:block;width:100%;height:100%;object-fit:contain}
+    .item-placeholder{display:grid;gap:5px;place-items:center;color:var(--muted);font-size:12px}
+    .item-placeholder strong{color:#8a9bb0;font-size:21px}
+    .item-copy{padding:10px 11px}
+    .item-name{color:var(--navy);font-size:13px;font-weight:750;overflow-wrap:anywhere}
+    .item-id{margin-top:3px;color:var(--muted);font-size:11px}
+    .empty{padding:30px 18px;border:1px dashed #b8c9dc;border-radius:12px;color:var(--muted);text-align:center;background:#fbfdff}
+    .footer{width:100%;margin-top:auto;padding:25px 0 38px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;text-align:center}
+    .footer strong{color:var(--blue-dark)}
+    .footer small{display:block;margin-top:6px;color:#8a9bb0;font-size:11px}
+    .about{margin:28px auto 0;max-width:720px;padding:20px;border:1px solid var(--line);border-radius:12px;background:#fff}
+    .about h2{margin:0 0 7px;color:var(--navy);font-size:18px}
+    .about p{margin:0;color:var(--muted);font-size:14px}
+    @media(max-width:760px){
+      .topbar-note{display:none}
+      .hero{padding-top:48px}
+      .stat-grid{grid-template-columns:repeat(2,1fr)}
+       .profile-body{display:grid;grid-template-columns:86px minmax(0,1fr);align-items:end;gap:14px;margin-top:-30px}
+      .profile-main{padding-bottom:4px}
+      .likes{grid-column:1/-1;width:100%;min-width:0;margin:0;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px}
+      .likes strong{display:inline-block}
+      .info-grid{grid-template-columns:1fr}
+    }
+    @media(max-width:520px){
+      .topbar-inner,.container{width:min(100% - 24px,1120px)}
+      .search-card{padding:18px}
+      .search-row{display:grid;grid-template-columns:1fr}
+      .search-button{padding:12px}
+      .profile-body{grid-template-columns:74px minmax(0,1fr);padding-left:16px;padding-right:16px;gap:12px}
+      .avatar{width:74px;height:74px;border-radius:14px}
+      .profile-meta,.exp{padding-left:16px;padding-right:16px}
+       .result-heading{align-items:flex-start;flex-direction:column}
+       .result-actions{width:100%}
+       .result-actions .app-action{flex:1}
+       .media-card{grid-template-columns:1fr}
+      .outfit-preview{min-height:210px}
+      .outfit-preview img{min-height:210px}
+    }
+    @media(max-width:380px){
+      .topbar-inner,.container{width:calc(100% - 20px)}
+      .brand-name{font-size:15px}
+      .hero{padding-top:38px}
+      h1{font-size:32px;letter-spacing:-1.2px}
+      .profile-body{grid-template-columns:64px minmax(0,1fr);gap:10px}
+      .avatar{width:64px;height:64px;border-radius:12px}
+      .player-name{font-size:20px}
+      .stat-grid{gap:8px}
+      .stat{padding:12px}
+      .item-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+      .item-image{height:112px}
+      .item-copy{padding:9px}
+    }
+    @media(hover:none){
+      .app-action:hover,.stat:hover,.info-card:hover,.item-card:hover{transform:none;box-shadow:0 3px 0 #e5eef8}
+      .search-card:hover{box-shadow:0 20px 42px rgba(24,62,110,.1),0 3px 0 #dbe8f7}
+    }
+    @media(prefers-reduced-motion:reduce){
+      *,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#" aria-label="Player Information home">
+        <span class="brand-mark">
+          <span class="brand-fallback" aria-hidden="true">PI</span>
+          <img src="https://i.ibb.co/6Jw6LQtH/40030962971a029790f93b801439690b.jpg" alt="Player Information logo" width="38" height="38" onerror="this.remove()">
+        </span>
+        <span class="brand-name">Player Information</span>
+      </a>
+      <button class="app-action" id="clear-button" type="button" aria-label="Clear search">Clear</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="eyebrow">Player Information</div>
+      <h1 id="page-title">Find a player profile</h1>
+      <p class="hero-copy">Search a Free Fire profile by UID.</p>
+
+      <form class="search-card" id="search-form" novalidate>
+        <label class="search-label" for="uid-input">Player UID</label>
+        <div class="search-row">
+          <input class="uid-input" id="uid-input" name="uid" type="text" inputmode="numeric" autocomplete="off" maxlength="15" pattern="[0-9]{6,15}" placeholder="Enter 6–15 digits" aria-describedby="uid-hint uid-status" required>
+          <button class="search-button" id="search-button" type="submit">Search player</button>
+        </div>
+        <p class="hint" id="uid-hint">Use the numeric UID shown on the player's profile.</p>
+        <div class="loading" id="loading" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span>Loading player information…</span></div>
+        <div class="status" id="uid-status" role="alert" aria-live="polite"><span class="status-icon" aria-hidden="true">!</span><span id="status-message"></span><button class="retry-button" id="retry-button" type="button" hidden>Try again</button></div>
+      </form>
+    </section>
+
+    <section class="results" id="results" aria-labelledby="result-title">
+      <div class="result-heading">
+        <div>
+          <h2 id="result-title">Player profile</h2>
+          <p id="result-subtitle">Information returned for this UID.</p>
+        </div>
+        <div class="result-actions">
+          <button class="app-action" id="copy-button" type="button">Copy UID</button>
+          <button class="app-action primary-action" id="share-button" type="button">Share</button>
+        </div>
+      </div>
+
+      <article class="profile-card">
+        <div class="profile-banner">
+          <div class="profile-banner-fallback" id="banner-fallback" aria-hidden="true">PI</div>
+          <img id="banner-image" alt="" width="1120" height="170">
+        </div>
+        <div class="profile-body">
+          <div class="avatar-wrap">
+            <div class="avatar" id="avatar-fallback" aria-hidden="true">PI</div>
+            <img class="avatar" id="avatar-image" alt="" width="86" height="86">
+            <span class="level" id="level-badge">Level —</span>
+          </div>
+          <div class="profile-main">
+            <h3 class="player-name" id="player-name">—</h3>
+            <p class="player-uid">UID: <strong id="player-uid">—</strong></p>
+          </div>
+          <div class="likes"><strong id="likes-value">—</strong><span>Total likes</span></div>
+        </div>
+        <div class="profile-meta" id="profile-badges"></div>
+        <div class="exp">
+          <div class="exp-label"><span>Experience</span><span id="exp-value">—</span></div>
+          <div class="exp-track" aria-label="Experience progress"><div class="exp-fill" id="exp-fill"></div></div>
+        </div>
+      </article>
+
+      <div class="tabs" role="tablist" aria-label="Player information sections">
+        <button class="tab" type="button" role="tab" aria-selected="true" aria-controls="overview-panel" id="overview-tab">Overview</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="outfit-panel" id="outfit-tab">Outfit</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="weapons-panel" id="weapons-tab">Weapons</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="guild-panel" id="guild-tab">Guild</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="pet-panel" id="pet-tab">Pet</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" aria-controls="social-panel" id="social-tab">Social</button>
+      </div>
+
+      <section class="panel active" id="overview-panel" role="tabpanel" aria-labelledby="overview-tab">
+        <h3 class="section-title">Core stats</h3>
+        <div class="stat-grid" id="stats-grid"></div>
+        <h3 class="section-title">Account and rank</h3>
+        <div class="info-grid" id="overview-grid"></div>
+        <div class="bio" id="signature" hidden></div>
+      </section>
+
+      <section class="panel" id="outfit-panel" role="tabpanel" aria-labelledby="outfit-tab" hidden>
+        <h3 class="section-title">Outfit preview</h3>
+        <div class="media-card">
+          <div class="outfit-preview" id="outfit-preview"><span id="outfit-status">Outfit preview unavailable</span><img id="outfit-image" alt="" width="280" height="280" loading="lazy"></div>
+          <div class="media-copy">
+            <h3>Current appearance</h3>
+            <p>The preview is loaded separately so the player information remains available even when the image service is unavailable.</p>
+          </div>
+        </div>
+        <h3 class="section-title">Equipped items</h3>
+        <div class="item-grid" id="equipped-grid"></div>
+        <h3 class="section-title">Outfit collection</h3>
+        <div class="item-grid" id="outfit-grid"></div>
+        <h3 class="section-title">Equipped skills</h3>
+        <div class="item-grid" id="skills-grid"></div>
+      </section>
+
+      <section class="panel" id="weapons-panel" role="tabpanel" aria-labelledby="weapons-tab" hidden>
+        <h3 class="section-title">Weapon skins</h3>
+        <div class="item-grid" id="weapons-grid"></div>
+      </section>
+
+      <section class="panel" id="guild-panel" role="tabpanel" aria-labelledby="guild-tab" hidden>
+        <h3 class="section-title">Guild</h3>
+        <div class="info-grid" id="guild-grid"></div>
+      </section>
+
+      <section class="panel" id="pet-panel" role="tabpanel" aria-labelledby="pet-tab" hidden>
+        <h3 class="section-title">Pet</h3>
+        <div class="info-grid" id="pet-grid"></div>
+      </section>
+
+      <section class="panel" id="social-panel" role="tabpanel" aria-labelledby="social-tab" hidden>
+        <h3 class="section-title">Social information</h3>
+        <div class="info-grid" id="social-grid"></div>
+      </section>
+    </section>
+
+    <footer class="footer">
+      <strong>Player Information</strong> · Free Fire player data viewer
+    </footer>
+  </main>
+
+  <script>
+    "use strict";
+
+    const PLAYER_ROUTE = "/api/player";
+    const OUTFIT_ROUTE = "/api/outfit-image";
+    const ICON_ROUTE = "/api/icon";
+    const PUBLIC_PLAYER_ROUTE = "https://ffxinfo-ffx.ffxapis.workers.dev/ff-info";
+    const PUBLIC_OUTFIT_ROUTE = "https://ffx-outfit-api-xyz.vercel.app/outfit-image";
+    const PUBLIC_ICON_ROUTE = "https://icons.icxbd.workers.dev/icon";
+    const UID_PATTERN = /^[0-9]{6,15}$/;
+    const state = { uid: "", player: null, requestId: 0 };
+    const CACHE_PREFIX = "player-information:";
+
+    const $ = (id) => document.getElementById(id);
+    const text = (value, fallback = "—") => {
+      if (value === null || value === undefined || String(value).trim() === "") return fallback;
+      return String(value);
+    };
+    const first = (...values) => values.find((value) => value !== null && value !== undefined && String(value).trim() !== "");
+    const formatNumber = (value) => {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return "—";
+      return number.toLocaleString();
+    };
+    const formatDate = (value) => {
+      if (value === null || value === undefined || value === "") return "—";
+      const number = Number(value);
+      const date = Number.isFinite(number) && number < 100000000000 ? new Date(number * 1000) : new Date(value);
+      return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+    };
+    const parseArray = (value) => {
+      if (Array.isArray(value)) return value;
+      if (typeof value !== "string" || !value.trim()) return [];
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    };
+    const safeId = (value) => {
+      const id = String(value ?? "").trim();
+      return /^[0-9]{1,15}$/.test(id) ? id : "";
+    };
+    const objectOrEmpty = (value) => value && typeof value === "object" && !Array.isArray(value) ? value : {};
+
+    function normalizeItem(value, category = "Item") {
+      if (value && typeof value === "object") {
+        const id = safeId(first(value.id, value.itemId, value.itemID, value.skinId, value.skillId));
+        return id ? { id, name: first(value.name, value.itemName, value.title, value.label) || "", category: first(value.category, value.type) || category, level: first(value.level, value.skillLevel) } : null;
+      }
+      const id = safeId(value);
+      return id ? { id, name: "", category, level: null } : null;
+    }
+
+    function normalizePlayer(payload) {
+      const root = objectOrEmpty(payload);
+      const source = objectOrEmpty(root.data || root);
+      let raw = {};
+      try { raw = objectOrEmpty(JSON.parse(source.raw_data || "")); } catch { raw = {}; }
+      const accountRaw = objectOrEmpty(raw.AccountInfo);
+      const profileRaw = objectOrEmpty(raw.AccountProfileInfo);
+      const equippedRaw = objectOrEmpty(raw.EquippedItemsInfo);
+      const socialRaw = objectOrEmpty(raw.SocialInfo);
+      const petRaw = objectOrEmpty(raw.PetInfo);
+      const guildRaw = objectOrEmpty(raw.GuildInfo);
+      const basic = objectOrEmpty(source.basicInfo || source.profileInfo || source.profile);
+      const profile = objectOrEmpty(source.profileInfo || source.profile);
+      const rank = objectOrEmpty(source.rankInfo || source.rankingInfo);
+      const account = objectOrEmpty(source.accountInfo);
+      const guild = objectOrEmpty(source.clanBasicInfo || source.guild);
+      const leader = objectOrEmpty(source.captainBasicInfo || source.guildLeader || guild.leader);
+      const pet = objectOrEmpty(source.petInfo || source.pet);
+      const social = objectOrEmpty(source.socialInfo || source.social);
+      const credit = objectOrEmpty(source.creditScoreInfo || source.credit);
+      const media = objectOrEmpty(source.cdnUrls || source.media);
+
+      const clothes = parseArray(first(profile.clothes, profile.outfitCollection, source.outfitCollection, source.clothes, source.equipped_outfit, equippedRaw.EquippedOutfit));
+      const equipped = clothes;
+      const skills = parseArray(first(profile.equipedSkills, profile.equippedSkills, source.equippedSkills, source.equipped_skills, equippedRaw.EquippedSkills));
+      const weapons = parseArray(first(source.weaponSkinShows, source.weaponSkins, source.weaponSkinCollection, source.weapon_skins, equippedRaw.WeaponSkinShows, equippedRaw.EquippedWeapon));
+
+      return {
+        profile: {
+          uid: text(first(basic.uid, basic.accountId, source.uid, accountRaw.AccountID), state.uid),
+          name: text(first(basic.nickname, basic.name, profile.nickname, source.name, source.username, accountRaw.AccountName), "Unknown player"),
+          level: first(basic.level, profile.level, account.level, source.level, accountRaw.AccountLevel),
+          exp: first(basic.exp, profile.exp, account.exp, source.exp, accountRaw.AccountEXP),
+          region: first(basic.region, source.region, source.server, accountRaw.AccountRegion),
+          likes: first(basic.liked, basic.likes, profile.likes, source.likes, source.liked, accountRaw.AccountLikes),
+          signature: first(social.signature, profile.signature, basic.signature, source.signature, socialRaw.signature),
+          createdAt: first(basic.createAt, basic.createdAt, account.createdAt, source.created_at, accountRaw.AccountCreateTime),
+          lastLogin: first(basic.lastLoginAt, basic.lastLogin, account.lastLogin, source.last_login, accountRaw.AccountLastLogin)
+        },
+        rank: {
+          brMaxRank: first(rank.brMaxRank, basic.maxRank, source.maxRank, source.br_max_rank, profileRaw.BrMaxRank),
+          brRankPoint: first(rank.brRankPoint, basic.rankingPoints, source.rankingPoints, source.br_rank_point, profileRaw.BrRankPoint),
+          csMaxRank: first(rank.csMaxRank, basic.csRank, source.csRank, source.cs_max_rank, profileRaw.CsMaxRank),
+          csRankPoint: first(rank.csRankPoint, basic.csRankingPoints, source.csRankingPoints, source.cs_rank_point, profileRaw.CsRankPoint),
+          showBrRank: first(rank.showBrRank, basic.showBrRank, source.show_br_rank, profileRaw.ShowBrRank),
+          showCsRank: first(rank.showCsRank, basic.showCsRank, source.show_cs_rank, profileRaw.ShowCsRank)
+        },
+        account: {
+          primeLevel: first(account.primeLevel, basic.primeLevel, source.prime_level, accountRaw.PrimeLevel),
+          creditScore: first(credit.creditScore, basic.creditScore, source.credit_score, source.creditScore, raw.CreditScoreInfo && raw.CreditScoreInfo.creditScore),
+          releaseVersion: first(account.releaseVersion, basic.releaseVersion, source.release_version, raw.ReleaseVersion),
+          lastUpdated: first(account.lastUpdated, source.lastUpdated, source.last_updated)
+        },
+        outfit: {
+          equippedOutfit: equipped.map((item) => normalizeItem(item, "Outfit")).filter(Boolean),
+          equippedWeapon: normalizeItem(first(source.equippedWeapon, source.weaponSkin), "Weapon"),
+          equippedWeapons: weapons.map((item) => normalizeItem(item, "Weapon")).filter(Boolean),
+          equippedSkills: skills.map((item) => normalizeItem(item, "Skill")).filter(Boolean),
+          outfits: clothes.map((item) => normalizeItem(item, "Outfit")).filter(Boolean)
+        },
+        media: {
+          avatarId: safeId(first(media.avatarId, profile.avatarId, basic.headPic, source.equipped_avatar_id, equippedRaw.EquippedAvatarId)),
+          bannerId: safeId(first(media.bannerId, profile.bannerId, basic.bannerId, source.equipped_banner_id, equippedRaw.EquippedBannerId))
+        },
+        pet: {
+          petId: first(pet.petId, pet.id, source.pet_id, petRaw.id),
+          petLevel: first(pet.level, pet.petLevel, source.pet_level, petRaw.level),
+          petExp: first(pet.exp, pet.petExp, source.pet_exp, petRaw.exp),
+          petSkinId: first(pet.petSkinId, pet.skinId, source.pet_skin_id, petRaw.skinId),
+          selectedSkillId: first(pet.selectedSkillId, pet.skillId, source.pet_selected_skill_id, petRaw.selectedSkillId),
+          name: first(pet.name, pet.petName, source.pet_name),
+          selected: first(pet.isSelected, pet.selected, source.pet_is_selected, petRaw.isSelected),
+          skills: parseArray(pet.skills).map((item) => normalizeItem(item, "Pet skill")).filter(Boolean)
+        },
+        guild: {
+          name: first(guild.clanName, guild.name, source.guild_name, source.clan_name, guildRaw.GuildName),
+          id: first(guild.clanId, guild.id, source.guild_id, source.clan_id, guildRaw.GuildID),
+          level: first(guild.clanLevel, guild.level, source.guild_level, guildRaw.GuildLevel),
+          memberCount: first(guild.memberNum, guild.memberCount, source.guild_member, guildRaw.GuildMember),
+          capacity: first(guild.capacity, source.guild_capacity, guildRaw.GuildCapacity),
+          leaderName: first(leader.nickname, leader.name, source.guild_leader_name),
+          leaderUid: first(leader.accountId, leader.uid, source.guild_leader_uid),
+          leaderLevel: first(leader.level, source.guild_leader_level),
+          leaderRank: first(leader.rank, leader.brRank, source.guild_leader_br_rank),
+          honorPoints: first(guild.honorPoint, guild.honorPoints, source.honor_points)
+        },
+        social: {
+          gender: first(social.gender, source.gender, socialRaw.gender),
+          language: first(social.language, source.language, socialRaw.language),
+          timeOnline: first(social.timeOnline, source.timeOnline),
+          timeActive: first(social.timeActive, source.timeActive, source.time_active, socialRaw.timeActive),
+          preferredMode: first(social.preferredMode, source.preferredMode, source.mode_prefer, socialRaw.modePrefer)
+        },
+        weapons: weapons.map((item) => normalizeItem(item, "Weapon skin")).filter(Boolean)
+      };
+    }
+
+    function clearNode(node) {
+      while (node.firstChild) node.removeChild(node.firstChild);
+    }
+
+    function setStatus(message, type = "error", canRetry = false) {
+      $("uid-status").className = "status show " + type;
+      $("status-message").textContent = message;
+      $("uid-status").querySelector(".status-icon").textContent = type === "info" ? "i" : "!";
+      $("retry-button").hidden = !canRetry;
+    }
+
+    function hideStatus() {
+      $("uid-status").className = "status";
+      $("status-message").textContent = "";
+      $("retry-button").hidden = true;
+    }
+
+    function saveCachedPlayer(uid, player) {
+      try {
+        localStorage.setItem(CACHE_PREFIX + uid, JSON.stringify({ savedAt: Date.now(), player }));
+      } catch {}
+    }
+
+    function readCachedPlayer(uid) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(CACHE_PREFIX + uid) || "null");
+        return saved && saved.player ? saved.player : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function setLoading(loading) {
+      $("loading").className = loading ? "loading show" : "loading";
+      $("search-button").disabled = loading;
+      $("search-button").textContent = loading ? "Searching…" : "Search player";
+      $("uid-input").ariaBusy = String(loading);
+    }
+
+    function addInfoCard(container, title, rows) {
+      const card = document.createElement("article");
+      card.className = "info-card";
+      const heading = document.createElement("h3");
+      heading.textContent = title;
+      card.appendChild(heading);
+      const list = document.createElement("dl");
+      list.className = "info-list";
+      rows.forEach((row) => {
+        if (!row) return;
+        const line = document.createElement("div");
+        line.className = "info-row";
+        const key = document.createElement("dt");
+        key.textContent = row[0];
+        const value = document.createElement("dd");
+        value.textContent = text(row[1]);
+        if (row[2]) value.className = "accent";
+        line.append(key, value);
+        list.appendChild(line);
+      });
+      card.appendChild(list);
+      container.appendChild(card);
+    }
+
+    function addStat(container, label, value, accent = false) {
+      const card = document.createElement("article");
+      card.className = "stat";
+      const name = document.createElement("div");
+      name.className = "stat-label";
+      name.textContent = label;
+      const number = document.createElement("div");
+      number.className = "stat-value" + (accent ? " accent" : "");
+      number.textContent = text(value);
+      card.append(name, number);
+      container.appendChild(card);
+    }
+
+    function showEmpty(container, message) {
+      clearNode(container);
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = message;
+      container.appendChild(empty);
+    }
+
+    function loadImage(image, sources, onLoad, onFail) {
+      let index = 0;
+      const next = () => {
+        if (index >= sources.length) {
+          onFail();
+          return;
+        }
+        image.src = sources[index++];
+      };
+      image.onload = onLoad;
+      image.onerror = next;
+      next();
+    }
+
+    function iconSources(id) {
+      const query = "?id=" + encodeURIComponent(id);
+      return [ICON_ROUTE + query, PUBLIC_ICON_ROUTE + query];
+    }
+
+    function addItemCard(container, item) {
+      const card = document.createElement("article");
+      card.className = "item-card";
+      const imageBox = document.createElement("div");
+      imageBox.className = "item-image";
+      const placeholder = document.createElement("div");
+      placeholder.className = "item-placeholder";
+      const marker = document.createElement("strong");
+      marker.textContent = "•";
+      const markerText = document.createElement("span");
+      markerText.textContent = "Item #" + item.id;
+      placeholder.append(marker, markerText);
+      imageBox.appendChild(placeholder);
+      const image = document.createElement("img");
+      image.alt = item.name || "Item #" + item.id;
+      image.loading = "lazy";
+      image.width = 130;
+      image.height = 130;
+      loadImage(image, iconSources(item.id), () => placeholder.remove(), () => image.remove());
+      imageBox.appendChild(image);
+      const copy = document.createElement("div");
+      copy.className = "item-copy";
+      const name = document.createElement("div");
+      name.className = "item-name";
+      name.textContent = item.name || "Item #" + item.id;
+      const id = document.createElement("div");
+      id.className = "item-id";
+      id.textContent = item.category + " · #" + item.id;
+      copy.append(name, id);
+      card.append(imageBox, copy);
+      container.appendChild(card);
+    }
+
+    function renderItems(container, items, emptyMessage) {
+      clearNode(container);
+      const unique = [];
+      items.forEach((item) => {
+        if (item && item.id && !unique.some((existing) => existing.id === item.id)) unique.push(item);
+      });
+      if (!unique.length) {
+        showEmpty(container, emptyMessage);
+        return;
+      }
+      unique.forEach((item) => addItemCard(container, item));
+    }
+
+    function renderProfile(player) {
+      const profile = player.profile;
+      const rank = player.rank;
+      const account = player.account;
+      state.player = player;
+      $("result-subtitle").textContent = "Information returned for UID " + profile.uid + ".";
+      $("player-name").textContent = profile.name;
+      $("player-uid").textContent = profile.uid;
+      $("level-badge").textContent = "Level " + text(profile.level);
+      $("likes-value").textContent = formatNumber(profile.likes);
+      $("exp-value").textContent = formatNumber(profile.exp) + " XP";
+      $("exp-fill").style.width = (Number.isFinite(Number(profile.exp)) ? Math.min(100, Math.max(3, Number(profile.exp) % 10000 / 100)) : 0) + "%";
+      $("signature").hidden = !profile.signature;
+      $("signature").textContent = profile.signature ? "“" + profile.signature + "”" : "";
+
+      const banner = $("banner-image");
+      const bannerFallback = $("banner-fallback");
+      banner.alt = "Player banner for " + profile.name;
+      banner.removeAttribute("src");
+      banner.style.display = "none";
+      bannerFallback.style.display = "grid";
+      if (player.media.bannerId) {
+        loadImage(banner, iconSources(player.media.bannerId), () => { banner.style.display = "block"; bannerFallback.style.display = "none"; }, () => { banner.style.display = "none"; bannerFallback.style.display = "grid"; });
+      }
+
+      const avatar = $("avatar-image");
+      const avatarFallback = $("avatar-fallback");
+      avatar.alt = "Player avatar for " + profile.name;
+      avatar.removeAttribute("src");
+      avatar.style.display = "none";
+      avatarFallback.style.display = "grid";
+      if (player.media.avatarId) {
+        loadImage(avatar, iconSources(player.media.avatarId), () => { avatar.style.display = "block"; avatarFallback.style.display = "none"; }, () => { avatar.style.display = "none"; avatarFallback.style.display = "grid"; });
+      }
+
+      clearNode($("profile-badges"));
+      [[profile.region, "Region"], [player.guild.name, "Guild"], [account.primeLevel, "Prime level"]].forEach(([value, label]) => {
+        if (value === null || value === undefined || String(value).trim() === "") return;
+        const badge = document.createElement("span");
+        badge.className = "badge";
+        badge.textContent = label + ": " + value;
+        $("profile-badges").appendChild(badge);
+      });
+
+      clearNode($("stats-grid"));
+      addStat($("stats-grid"), "Level", profile.level, true);
+      addStat($("stats-grid"), "Experience", formatNumber(profile.exp));
+      addStat($("stats-grid"), "Likes", formatNumber(profile.likes), true);
+      addStat($("stats-grid"), "BR rank", rank.brMaxRank, true);
+      addStat($("stats-grid"), "BR points", formatNumber(rank.brRankPoint));
+      addStat($("stats-grid"), "CS rank", rank.csMaxRank, true);
+      addStat($("stats-grid"), "CS points", formatNumber(rank.csRankPoint));
+      addStat($("stats-grid"), "Credit score", account.creditScore);
+
+      clearNode($("overview-grid"));
+      addInfoCard($("overview-grid"), "Account", [
+        ["UID", profile.uid, true],
+        ["Created", formatDate(profile.createdAt)],
+        ["Last login", formatDate(profile.lastLogin)],
+        ["Region", profile.region]
+      ]);
+      addInfoCard($("overview-grid"), "Battle Royale", [
+        ["Current rank", rank.brMaxRank, true],
+        ["Rank points", formatNumber(rank.brRankPoint)],
+        ["Show rank", rank.showBrRank === undefined ? null : (rank.showBrRank ? "Active" : "Hidden")],
+        ["Last updated", formatDate(account.lastUpdated)]
+      ]);
+      addInfoCard($("overview-grid"), "Clash Squad", [
+        ["Current rank", rank.csMaxRank, true],
+        ["Rank points", formatNumber(rank.csRankPoint)],
+        ["Show rank", rank.showCsRank === undefined ? null : (rank.showCsRank ? "Active" : "Hidden")],
+        ["Release version", account.releaseVersion]
+      ]);
+
+      renderOutfit(player);
+      renderGuild(player.guild);
+      renderPet(player.pet);
+      renderSocial(player);
+    }
+
+    function renderOutfit(player) {
+      const preview = $("outfit-image");
+      const status = $("outfit-status");
+      preview.removeAttribute("src");
+      preview.style.display = "block";
+      status.style.display = "none";
+      status.textContent = "Outfit preview unavailable";
+      preview.alt = "Player outfit preview for " + player.profile.name;
+      status.textContent = "Loading outfit preview…";
+      loadImage(preview, [PUBLIC_OUTFIT_ROUTE + "?uid=" + encodeURIComponent(player.profile.uid), OUTFIT_ROUTE + "?uid=" + encodeURIComponent(player.profile.uid)], () => { preview.style.display = "block"; status.style.display = "none"; }, () => { preview.style.display = "none"; status.style.display = "block"; });
+      renderItems($("equipped-grid"), player.outfit.equippedOutfit.concat(player.outfit.equippedWeapons || [], player.outfit.equippedWeapon || []).filter(Boolean), "No equipped outfit data available.");
+      renderItems($("outfit-grid"), player.outfit.outfits, "No outfit collection data available.");
+      renderItems($("skills-grid"), player.outfit.equippedSkills, "No equipped skill data available.");
+      renderItems($("weapons-grid"), player.weapons, "No weapon skin data available.");
+    }
+
+    function renderGuild(guild) {
+      clearNode($("guild-grid"));
+      if (!guild.name) {
+        showEmpty($("guild-grid"), "No guild data available.");
+        return;
+      }
+      addInfoCard($("guild-grid"), "Guild details", [
+        ["Name", guild.name, true],
+        ["Guild ID", guild.id],
+        ["Level", guild.level],
+        ["Members", guild.memberCount && guild.capacity ? guild.memberCount + " / " + guild.capacity : guild.memberCount],
+        ["Honor points", formatNumber(guild.honorPoints)]
+      ]);
+      if (guild.leaderName) addInfoCard($("guild-grid"), "Guild leader", [
+        ["Name", guild.leaderName, true],
+        ["UID", guild.leaderUid],
+        ["Level", guild.leaderLevel],
+        ["Rank", guild.leaderRank]
+      ]);
+    }
+
+    function renderPet(pet) {
+      clearNode($("pet-grid"));
+      if (!pet.name && !pet.petId) {
+        showEmpty($("pet-grid"), "No pet data available.");
+        return;
+      }
+      addInfoCard($("pet-grid"), "Pet details", [
+        ["Name", pet.name, true],
+        ["Pet ID", pet.petId],
+        ["Level", pet.petLevel],
+        ["Experience", formatNumber(pet.petExp)],
+        ["Skin ID", pet.petSkinId],
+        ["Selected", pet.selected === undefined ? null : (pet.selected ? "Active" : "Inactive")]
+      ]);
+      if (pet.skills.length) addInfoCard($("pet-grid"), "Pet skills", pet.skills.map((skill) => ["Skill #" + skill.id, skill.name || "Not named", false]));
+    }
+
+    function renderSocial(player) {
+      clearNode($("social-grid"));
+      addInfoCard($("social-grid"), "Social", [
+        ["Gender", player.social.gender],
+        ["Language", player.social.language],
+        ["Time online", player.social.timeOnline],
+        ["Time active", player.social.timeActive],
+        ["Preferred mode", player.social.preferredMode]
+      ]);
+      addInfoCard($("social-grid"), "Privacy", [
+        ["Show BR rank", player.rank.showBrRank === undefined ? null : (player.rank.showBrRank ? "Active" : "Hidden")],
+        ["Show CS rank", player.rank.showCsRank === undefined ? null : (player.rank.showCsRank ? "Active" : "Hidden")],
+        ["Signature", player.profile.signature]
+      ]);
+    }
+
+    function activateTab(tab) {
+      document.querySelectorAll(".tab").forEach((button) => {
+        const selected = button === tab;
+        button.setAttribute("aria-selected", String(selected));
+        const panel = $(button.getAttribute("aria-controls"));
+        panel.classList.toggle("active", selected);
+        panel.hidden = !selected;
+      });
+      tab.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    }
+
+    async function fetchWithTimeout(url, timeout = 9000) {
+      const controller = new AbortController();
+      const timer = window.setTimeout(() => controller.abort(), timeout);
+      try {
+        return await fetch(url, { method: "GET", cache: "no-store", headers: { Accept: "application/json" }, signal: controller.signal });
+      } finally {
+        window.clearTimeout(timer);
+      }
+    }
+
+    async function searchPlayer(uid) {
+      const query = "?uid=" + encodeURIComponent(uid);
+      const routes = [PLAYER_ROUTE + query, PUBLIC_PLAYER_ROUTE + query];
+      let lastError = new Error("UNAVAILABLE");
+      for (const route of routes) {
+        const attempts = route.indexOf(PUBLIC_PLAYER_ROUTE) === 0 ? 2 : 1;
+        for (let attempt = 0; attempt < attempts; attempt += 1) {
+          try {
+            const response = await fetchWithTimeout(route);
+            let payload = null;
+            try { payload = await response.json(); } catch { payload = null; }
+            if (response.status === 429) throw new Error("RATE_LIMITED");
+            if (response.status === 404 || (payload && payload.error === true && !payload.data)) {
+              lastError = new Error("NOT_FOUND");
+              break;
+            }
+            if (!response.ok || !payload) {
+              lastError = new Error("UNAVAILABLE");
+              if (response.status >= 500 && attempt + 1 < attempts) {
+                await new Promise((resolve) => window.setTimeout(resolve, 300 + attempt * 300));
+                continue;
+              }
+              break;
+            }
+            const player = normalizePlayer(payload);
+            if (player.profile.uid === uid || player.profile.name !== "Unknown player") return player;
+            lastError = new Error("NOT_FOUND");
+            break;
+          } catch (error) {
+            if (error.message === "RATE_LIMITED") throw error;
+            lastError = new Error("UNAVAILABLE");
+            if (attempt + 1 < attempts) {
+              await new Promise((resolve) => window.setTimeout(resolve, 300 + attempt * 300));
+              continue;
+            }
+          }
+        }
+      }
+      throw lastError;
+    }
+
+    $("search-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const uid = $("uid-input").value.trim();
+      const requestId = ++state.requestId;
+      hideStatus();
+      $("results").classList.remove("show");
+      if (!UID_PATTERN.test(uid)) {
+        setStatus("Please enter a valid 6–15 digit UID.");
+        $("uid-input").focus();
+        return;
+      }
+      state.uid = uid;
+      setLoading(true);
+      try {
+        const player = await searchPlayer(uid);
+        if (requestId !== state.requestId) return;
+        saveCachedPlayer(uid, player);
+        renderProfile(player);
+        $("results").classList.add("show");
+        activateTab($("overview-tab"));
+        $("results").scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch (error) {
+        if (requestId !== state.requestId) return;
+        if (error.message === "UNAVAILABLE") {
+          const cached = readCachedPlayer(uid);
+          if (cached) {
+            renderProfile(cached);
+            $("results").classList.add("show");
+            activateTab($("overview-tab"));
+            setStatus("Live service is reconnecting. Showing the last available result.", "info", true);
+          } else {
+            setStatus("Live player service is busy. Tap Try again in a moment.", "error", true);
+          }
+        } else {
+          const message = error.message === "NOT_FOUND" ? "No player information was found for this UID." :
+            error.message === "RATE_LIMITED" ? "Too many requests. Please wait and try again." :
+            "The player service could not complete this request.";
+          setStatus(message, "error", error.message !== "NOT_FOUND");
+        }
+      } finally {
+        if (requestId === state.requestId) setLoading(false);
+      }
+    });
+
+    $("uid-input").addEventListener("input", () => {
+      $("uid-input").value = $("uid-input").value.replace(/[^0-9]/g, "").slice(0, 15);
+      if ($("uid-status").classList.contains("show")) hideStatus();
+    });
+
+    $("retry-button").addEventListener("click", () => $("search-form").requestSubmit());
+
+    $("copy-button").addEventListener("click", async () => {
+      if (!state.player || !state.player.profile.uid) return;
+      try {
+        await navigator.clipboard.writeText(state.player.profile.uid);
+        $("copy-button").textContent = "Copied";
+        window.setTimeout(() => { $("copy-button").textContent = "Copy UID"; }, 1600);
+      } catch {
+        setStatus("The UID could not be copied on this device.", "info");
+      }
+    });
+
+    $("share-button").addEventListener("click", async () => {
+      if (!state.player || !state.player.profile.uid) return;
+      const shareData = {
+        title: "Player Information",
+        text: state.player.profile.name + " · UID " + state.player.profile.uid
+      };
+      try {
+        if (navigator.share) {
+          await navigator.share(shareData);
+        } else {
+          await navigator.clipboard.writeText(shareData.text);
+          $("share-button").textContent = "Copied";
+          window.setTimeout(() => { $("share-button").textContent = "Share"; }, 1600);
+        }
+      } catch (error) {
+        if (error && error.name !== "AbortError") setStatus("The player card could not be shared.", "info");
+      }
+    });
+
+    $("clear-button").addEventListener("click", () => {
+      state.requestId += 1;
+      $("uid-input").value = "";
+      $("results").classList.remove("show");
+      hideStatus();
+      state.uid = "";
+      state.player = null;
+      $("uid-input").focus();
+    });
+
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => activateTab(tab));
+      tab.addEventListener("keydown", (event) => {
+        const tabs = Array.from(document.querySelectorAll(".tab"));
+        const index = tabs.indexOf(tab);
+        let nextIndex = index;
+        if (event.key === "ArrowRight") nextIndex = (index + 1) % tabs.length;
+        if (event.key === "ArrowLeft") nextIndex = (index - 1 + tabs.length) % tabs.length;
+        if (nextIndex !== index) {
+          event.preventDefault();
+          tabs[nextIndex].focus();
+          activateTab(tabs[nextIndex]);
+        }
+      });
+    });
+
+    $("uid-input").focus();
+  </script>
+</body>
+</html>
